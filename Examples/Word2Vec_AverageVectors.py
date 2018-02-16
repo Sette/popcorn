@@ -155,12 +155,13 @@ if __name__ == '__main__':
 
 
 
-    
     # ****** Create average vectors for the training and test sets
     #
     print ("Creating average feature vecs for training reviews")
 
     trainDataVecs = getAvgFeatureVecs( getCleanReviews(train), model, num_features )
+
+
 
     print ("Creating average feature vecs for test reviews")
 

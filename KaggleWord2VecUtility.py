@@ -37,8 +37,6 @@ class KaggleWord2VecUtility(object):
 
     @staticmethod
     def review_to_wordlist(review, remove_stopwords=True, stem = False, lem= False ):
-        # Function to convert a document to a sequence of words,
-        # optionally removing stop words.  Returns a list of words.
 
         #
         # 1. Remove HTML
@@ -46,7 +44,7 @@ class KaggleWord2VecUtility(object):
 
 
         #
-        # 2. Remove non-letters
+        # 2. Remove caractéres não alfa-numéricos
         review_text = re.sub("[^a-zA-Z]"," ", review_text)
 
 
@@ -61,27 +59,23 @@ class KaggleWord2VecUtility(object):
         else:
             words = tokenizer.tokenize(review_text)
         #
-        # 4. Return a list of words
+        # 4. Retorna a lista de palavras
         return(words)
 
     # Define a function to split a review into parsed sentences
     @staticmethod
     def review_to_sentences( review, tokenizer, remove_stopwords=True ):
-        # Function to split a review into parsed sentences. Returns a
-        # list of sentences, where each sentence is a list of words
         #
-        # 1. Use the NLTK tokenizer to split the paragraph into sentences
+        # 1. Usa o tokenizador passado para tokenizar a sentença
         raw_sentences = tokenizer.tokenize(review.strip())
         #
-        # 2. Loop over each sentence
+
         sentences = []
         for raw_sentence in raw_sentences:
-            # If a sentence is empty, skip it
             if len(raw_sentence) > 0:
-                # Otherwise, call review_to_wordlist to get a list of words
+                # 2. Chama review_to_wordlist para ter a lista de palavras
                 sentences.append( KaggleWord2VecUtility.review_to_wordlist( raw_sentence, \
-                  remove_stopwords, stem=True ))
+                  remove_stopwords, stem=False ))
         #
-        # Return the list of sentences (each sentence is a list of words,
-        # so this returns a list of lists
+        # Retorna a lista de sentenças, onde cada sentença é uma lista de palavras
         return sentences
