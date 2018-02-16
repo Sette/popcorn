@@ -24,6 +24,8 @@ from gensim.models import Word2Vec
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
+from sklearn.metrics import f1_score
+from sklearn.metrics import precision_score
 from KaggleWord2VecUtility import KaggleWord2VecUtility
 from nltk.metrics import ConfusionMatrix
 
@@ -94,9 +96,9 @@ if __name__ == '__main__':
 
     # Read data from files
     train = pd.read_csv( os.path.join(os.path.dirname(__file__), 'data', 'labeledTrainData.tsv'), header=0, delimiter="\t", quoting=3 )
-    test = pd.read_csv(os.path.join(os.path.dirname(__file__), 'data', 'testData.tsv'), header=0, delimiter="\t", quoting=3 )
+    #test = pd.read_csv(os.path.join(os.path.dirname(__file__), 'data', 'testData.tsv'), header=0, delimiter="\t", quoting=3 )
 
-    #train,test = train_test_split(train, test_size=0.33, random_state=42)
+    train,test = train_test_split(train, test_size=0.33, random_state=42)
 
     unlabeled_train = pd.read_csv( os.path.join(os.path.dirname(__file__), 'data', "unlabeledTrainData.tsv"), header=0,  delimiter="\t", quoting=3 )
 
@@ -104,7 +106,6 @@ if __name__ == '__main__':
     print ("Read %d labeled train reviews, %d labeled test reviews, " \
     % (train["review"].size,
      test["review"].size, ))
-
 
 
     # Load the punkt tokenizer
@@ -165,6 +166,9 @@ if __name__ == '__main__':
 
     testDataVecs = getAvgFeatureVecs( getCleanReviews(test), model, num_features )
 
+    classificador = nltk.NaiveBayesClassifier.train(trainDataVecs)
+    print(classificador.labels())
+    print(classificador.show_most_informative_features(20))
 
     # ****** Fit a random forest to the training set, then make predictions
     #
@@ -174,18 +178,21 @@ if __name__ == '__main__':
     print ("Fitting a random forest to labeled training data...")
     forest = forest.fit( trainDataVecs, train["sentiment"] )
 
+
+
     # Test & extract results
     result = forest.predict( testDataVecs )
+
 
     # Write the test results
     output = pd.DataFrame( data={"id":test["id"], "sentiment":result} )
     output.to_csv( "saida.csv", index=False, quoting=3 )
 
-    '''
-    print(accuracy_score(list(test['sentiment']), result))
 
+    print("Accuracy: ",accuracy_score(list(test['sentiment']), result))
+    print("F1: ", f1_score(list(test['sentiment']), result))
+    print("Precision: ", precision_score(list(test['sentiment']), result))
     matriz = ConfusionMatrix( test['sentiment'], result)
 
     print(matriz)
 
-    '''
