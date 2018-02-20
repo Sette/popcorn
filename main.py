@@ -17,8 +17,6 @@ from KaggleWord2VecUtility import KaggleWord2VecUtility
 from nltk.metrics import ConfusionMatrix
 
 
-#Define o tokenizador a ser utilizado
-tokenizer = nltk.data.load('tokenizers/punkt/english.pick
 
 import pandas as pd
 import numpy as np
@@ -251,7 +249,6 @@ def main():
 
 if __name__ == '__main__':
     main()
-le')
 
 def makeFeatureVec(words, model, num_features):
     # Function to average all of the word vectors in a given
@@ -322,15 +319,15 @@ def main():
                        quoting=3)
     '''
     #Opcional ---- Cross over com o conjunto de treinamento
-    train,test = train_test_split(train, test_size=0.33, random_state=42)
+    train,test = train_test_split(train, train_size=0.7, random_state=42)
 
     unlabeled_train = pd.read_csv(os.path.join(os.path.dirname(__file__), 'data', "unlabeledTrainData.tsv"), header=0,
                                   delimiter="\t", quoting=3)
 
     # Verifica o numero de registros carregados
-    print("Lidos %d registros de treinamento com label, %d registros de teste, registros de treinamento sem Label " \
+    print("Lidos %d registros de treinamento com label, %d registros de teste, %d registros de treinamento sem Label " \
           % (train["review"].size,
-             test["review"].size,unlabeled_train["review"].size))
+             test["review"].size, unlabeled_train["review"].size))
 
     # ******Cria lista de sentenças encontradas na base de treinamento com label e tambem a sem label
     # ****** Limpa as sentenças

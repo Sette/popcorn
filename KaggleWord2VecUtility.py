@@ -66,6 +66,10 @@ class KaggleWord2VecUtility(object):
     @staticmethod
     def review_to_sentences( review, tokenizer, remove_stopwords=True ):
         #
+
+        # Define o tokenizador a ser utilizado
+        tokenizer = nltk.data.load('tokenizers/punkt/english.pick')
+
         # 1. Usa o tokenizador passado para tokenizar a sentença
         raw_sentences = tokenizer.tokenize(review.strip())
         #
@@ -75,7 +79,7 @@ class KaggleWord2VecUtility(object):
             if len(raw_sentence) > 0:
                 # 2. Chama review_to_wordlist para ter a lista de palavras
                 sentences.append( KaggleWord2VecUtility.review_to_wordlist( raw_sentence, \
-                  remove_stopwords, stem=False ))
+                  remove_stopwords, stem=True ))
         #
         # Retorna a lista de sentenças, onde cada sentença é uma lista de palavras
         return sentences
