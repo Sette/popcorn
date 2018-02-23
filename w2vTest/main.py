@@ -9,15 +9,13 @@ import numpy as np
 from gensim.models.word2vec import Word2Vec
 import struct
 from collections import Counter, defaultdict
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.ensemble import ExtraTreesClassifier
+from sklearn.feature_extraction.text import CountVectorizer,TfidfVectorizer
+from sklearn.ensemble import ExtraTreesClassifier,RandomForestClassifier
 from sklearn.naive_bayes import BernoulliNB, MultinomialNB
 from sklearn.svm import SVC
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import accuracy_score
-from sklearn.metrics import f1_score
-from sklearn.metrics import precision_score
+from sklearn.metrics import f1_score,precision_score
 from gensim.models import KeyedVectors
 import os
 from bs4 import BeautifulSoup
@@ -141,19 +139,19 @@ def main():
         [("tfidf_vectorizer", TfidfVectorizer(analyzer=lambda x: x)), ("linear svc", SVC(kernel="linear"))])
 
     # Extra Trees classifier is almost universally great, let's stack it with our embeddings
-    etree_glove_small = Pipeline([("glove vectorizer", MeanEmbeddingVectorizer(w2v)),
-                                  ("extra trees", ExtraTreesClassifier(n_estimators=200))])
-    etree_glove_small_tfidf = Pipeline([("glove vectorizer", TfidfEmbeddingVectorizer(w2v)),
-                                        ("extra trees", ExtraTreesClassifier(n_estimators=200))])
-    etree_glove_big = Pipeline([("glove vectorizer", MeanEmbeddingVectorizer(w2v)),
-                                ("extra trees", ExtraTreesClassifier(n_estimators=200))])
-    etree_glove_big_tfidf = Pipeline([("glove vectorizer", TfidfEmbeddingVectorizer(w2v)),
-                                      ("extra trees", ExtraTreesClassifier(n_estimators=200))])
 
     etree_w2v = Pipeline([("word2vec vectorizer", MeanEmbeddingVectorizer(w2v)),
                           ("extra trees", ExtraTreesClassifier(n_estimators=200))])
     etree_w2v_tfidf = Pipeline([("word2vec vectorizer", TfidfEmbeddingVectorizer(w2v)),
                                 ("extra trees", ExtraTreesClassifier(n_estimators=200))])
+
+
+    #Random forest classifier with our embeddings
+    random_w2v_tfidf = Pipeline([("word2vec vectorizer", TfidfEmbeddingVectorizer(w2v)),
+                                ("extra trees", RandomForestClassifier(n_estimators=200))])
+    random_w2v = Pipeline([("word2vec vectorizer", MeanEmbeddingVectorizer(w2v)),
+                          ("extra trees", RandomForestClassifier(n_estimators=200))])
+
 
     all_models = [
         ("mult_nb", mult_nb),
@@ -164,10 +162,8 @@ def main():
         ("svc_tfidf", svc_tfidf),
         ("w2v", etree_w2v),
         ("w2v_tfidf", etree_w2v_tfidf),
-        ("glove_small", etree_glove_small),
-        ("glove_small_tfidf", etree_glove_small_tfidf),
-        ("glove_big", etree_glove_big),
-        ("glove_big_tfidf", etree_glove_big_tfidf),
+        ("random_w2v", random_w2v),
+        ("random_w2v_tfidf", random_w2v_tfidf),
 
     ]
     unsorted_scores = []
