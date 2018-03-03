@@ -15,18 +15,24 @@ from sklearn.naive_bayes import BernoulliNB, MultinomialNB
 from sklearn.svm import SVC
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import accuracy_score
-from sklearn.metrics import f1_score,precision_score
+from sklearn.metrics import f1_score,precision_score,recall_score
 from gensim.models import KeyedVectors
 import os
 from bs4 import BeautifulSoup
 from sklearn.model_selection import train_test_split
 from TfidfEmbeddingVectorizer import *
 from MeanEmbeddingVectorizer import *
+from nltk.corpus import stopwords
+import nltk
+import gensim.models.word2vec as w2v
 
 TRAIN_SET_PATH = "r8-train-no-stop.txt"
 GLOVE_6B_50D_PATH = "glove.6B.50d.txt"
 GLOVE_840B_300D_PATH = "glove.840B.300d.txt"
 encoding="utf-8"
+stopwords = set(stopwords.words('english'))
+
+tokenizer = nltk.tokenize.RegexpTokenizer(r'\w+')
 
 
 def loadDataset(file):
@@ -46,14 +52,15 @@ def loadDataset_Review(file):
         #
         # 2. Remove caractéres não alfa-numéricos
         review_text = re.sub("[^a-zA-Z]", " ", review_text).lower()
-        review_text = [w for w in review_text.split() if len(w) > 2]
+        review_text = [w for w in tokenizer.tokenize(review_text) if w not in stopwords]
         label, text = line['sentiment'], review_text
         X.append((text))
         y.append(label)
+
     return np.array(X), np.array(y)
 
 
-
+'''
 def loadGloveSmall(GLOVE,X):
     glove_small = {}
     all_words = set(w for words in X for w in words)
@@ -75,6 +82,7 @@ def loadGloveBig(GLOVE,X,all_words):
                 nums = np.array(parts[1:], dtype=np.float32)
                 glove_big[word] = nums
 
+'''
 
 def main():
     train = pd.read_csv(os.path.join(os.path.dirname(__file__),'labeledTrainData.tsv'),
@@ -88,8 +96,6 @@ def main():
 
     X_test,y_test = loadDataset_Review(test)
 
-    #X,y = loadDataset(TRAIN_SET_PATH)
-    print(X_w2v)
 
 
     print("Total de exemplos carregados %s" % len(y))
@@ -108,20 +114,19 @@ def main():
     num_workers = 4  # Number of threads to run in parallel
     context = 10  # Context window size
     downsampling = 1e-3  # Downsample setting for frequent words
-
-    model = gensim.models.Word2Vec(X_w2v, workers=num_workers, \
+    model_name = "100features_40minwords_10context"
+    try:
+        model = gensim.models.Word2Vec.load(model_name)
+    except:
+        print("Gerou o modelo")
+        model = gensim.models.Word2Vec(X_w2v, workers=num_workers, \
                      size=num_features, min_count=min_word_count, \
                      window=context, sample=downsampling, seed=1)
+        model.save(model_name)
 
     w2v = dict(zip(model.wv.index2word, model.wv.syn0))
 
-    model_name = "100features_40minwords_10context"
-    model.save(model_name)
 
-
-
-    #model = KeyedVectors.load_word2vec_format('GoogleNews-vectors-negative300.bin', binary=True)
-    #w2v = {w: vec for w, vec in zip(model.wv.index2word, model.wv.syn0)}
 
     # start with the classics - naive bayes of the multinomial and bernoulli varieties
     # with either pure counts or tfidf features
@@ -169,18 +174,17 @@ def main():
     unsorted_scores = []
     for name, model in all_models:
         print("Training with ", name)
-        unsorted_scores.append((name,accuracy_score(y_test, model.fit(X,y).predict(X_test))))
+        predict = model.fit(X,y).predict(X_test)
+        unsorted_scores.append((name,accuracy_score(y_test,predict),\
+            f1_score(y_test,predict), precision_score(y_test,predict),recall_score(y_test,predict)))
 
 
-    #unsorted_scores = [(name, accuracy_score(list(test['sentiment']), model.fit(X,y))) for name, model in all_models]
 
-    #unsorted_scores = [(name, cross_val_score(model, X, y, cv=5).mean()) for name, model in all_models]
     scores = sorted(unsorted_scores, key=lambda x: -x[1])
 
-    print(tabulate(scores, floatfmt=".4f", headers=("model", 'Accuracy')))
+    print(tabulate(scores, floatfmt=".4f", headers=("model", 'Accuracy','F1','Precision','Recall')))
 
-    plt.figure(figsize=(15, 6))
-    sns.barplot(x=[name for name, _ in scores], y=[score for _, score in scores])
+
 
 
 
